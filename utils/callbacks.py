@@ -69,20 +69,13 @@ async def menu_handler(clbck: CallbackQuery, state: FSMContext) -> None:
             await info(clbck, state)
 
         case "db":
-            await clbck.message.edit_reply_markup()
-            mes_id = await clbck.message.answer(get_text("databases", hlink("библиотеки Python", "https://github.com/aiogram/aiogram")), 
-                                       reply_markup=kb.buttons("back"), disable_web_page_preview=True)
-            add_mes(clbck.from_user.id, mes_id.message_id)
+            await database(clbck)
 
         case "graph":
-            await send_message(clbck, "graphs")
-            photos = [InputMediaPhoto(media=FSInputFile(path=path.join("support", "assets", "matplot_{}.png".format(num))), 
-                                      caption="matplot_" + str(num)) for num in range(1, 4)]
-            mes_id = await clbck.message.answer_media_group(media=photos)
-            [add_mes(clbck.from_user.id, mes.message_id) for mes in mes_id]
-
-            await asyncio.sleep(4)
-            await send_message(clbck, "also", kb.buttons("back")) 
+            await graph(clbck)
+            
+        case "help":
+            await help(clbck)
 
         case "examples":
             await send_message(clbck, "examples", kb.works())
@@ -99,6 +92,27 @@ async def pay(clbk: CallbackQuery):
     await payment.pay(clbk.from_user.id)
 
 
+# Базы данных
+async def database(clbck: CallbackQuery):
+    await clbck.message.edit_reply_markup()
+    mes_id = await clbck.message.answer(get_text("databases", hlink("библиотеки Python", "https://github.com/aiogram/aiogram")), 
+                                reply_markup=kb.buttons("back"), disable_web_page_preview=True)
+    add_mes(clbck.from_user.id, mes_id.message_id)
+
+
+# Составление графа
+async def graph(clbck: CallbackQuery):
+    await send_message(clbck, "graphs")
+    photos = [InputMediaPhoto(media=FSInputFile(path=path.join("support", "assets", "matplot_{}.png".format(num))), 
+                                caption="matplot_" + str(num)) for num in range(1, 4)]
+    mes_id = await clbck.message.answer_media_group(media=photos)
+    [add_mes(clbck.from_user.id, mes.message_id) for mes in mes_id]
+
+    await asyncio.sleep(4)
+    await send_message(clbck, "also", kb.buttons("back")) 
+
+
+
 # Форматирование текста
 async def formatting(clbk: CallbackQuery):
     await clbk.message.edit_reply_markup()
@@ -110,7 +124,10 @@ async def formatting(clbk: CallbackQuery):
 async def currence(clbk: CallbackQuery):
     await send_message(clbk, "choose_currency", kb.currency())
 
-    path.join("temp", "shares.png")
+
+# Оплата и поддержка
+async def help(clbk: CallbackQuery):
+    await send_message(clbk, "to_pay", kb.buttons("back"))
 
 
 # Выбор актива
@@ -163,5 +180,5 @@ async def screen_handler(clbck: CallbackQuery, state: FSMContext) -> None:
     photos = [InputMediaPhoto(media=FSInputFile(path=path.join(path_folder, files[file])), caption="photo_" + str(file)) for file in range(len(files))]
     mes_id = await clbck.message.answer_media_group(media=photos)
     [add_mes(clbck.from_user.id, mes.message_id) for mes in mes_id]
-    
+
     await send_message(clbck, "screens_label", kb.buttons("back"), None, None, get_text("example_works").split("_")[int(num)][4:])
