@@ -8,7 +8,7 @@ from loader import dp, bot
 import asyncio
 from os import path, listdir
 
-from config import add_mes, clear_mes
+from config import add_mes, clear_mes, get_menu
 
 from utils import currency
 from utils import payment
@@ -21,12 +21,16 @@ from states import UserState
 # Возвращение в меню
 @dp.callback_query(F.data == "back")
 async def menu_handler(clbck: CallbackQuery, state: FSMContext) -> None:
+    id = clbck.from_user.id
     try:
-        await bot.delete_messages(clbck.from_user.id, clear_mes(clbck.from_user.id))
+        await bot.edit_message_reply_markup(chat_id=id, message_id=get_menu(id), reply_markup=kb.menu())
+    except:
+        await send_message(clbck, "menu", kb.menu(), state=state, new_state=UserState.default, photo=path.join("support", "assets", "oleg.jpg"), nodelete=True, set_menu=True)
+    
+    try:
+        await bot.delete_messages(id, clear_mes(clbck.from_user.id))
     except:
         pass
-
-    await send_message(clbck.message, "menu", kb.menu(), state=state, new_state=UserState.default, photo=path.join("support", "assets", "oleg.jpg"))
 
 
 # Выбран эмодзи
@@ -34,7 +38,7 @@ async def menu_handler(clbck: CallbackQuery, state: FSMContext) -> None:
 async def emotion_handler(clbck: CallbackQuery, state: FSMContext) -> None:
     emote = get_text("emotions").split().index(clbck.data[-1])
     await clbck.message.answer(clbck.data[-1])
-    await send_message(clbck.message, "emotions_" + str(emote), nodelete=True)
+    await send_message(clbck, "emotions_" + str(emote), nodelete=True)
 
     await asyncio.sleep(2)
     license_ = get_text("license").split("лицензионное соглашение")
@@ -71,18 +75,17 @@ async def menu_handler(clbck: CallbackQuery, state: FSMContext) -> None:
             add_mes(clbck.from_user.id, mes_id.message_id)
 
         case "graph":
-            await send_message(clbck.message, "graphs")
+            await send_message(clbck, "graphs")
             photos = [InputMediaPhoto(media=FSInputFile(path=path.join("support", "assets", "matplot_{}.png".format(num))), 
                                       caption="matplot_" + str(num)) for num in range(1, 4)]
             mes_id = await clbck.message.answer_media_group(media=photos)
-            print(mes_id)
-            # add_mes(clbck.from_user.id, mes_id.message_id)
+            [add_mes(clbck.from_user.id, mes.message_id) for mes in mes_id]
 
             await asyncio.sleep(4)
-            await send_message(clbck.message, "also", kb.buttons("back")) 
+            await send_message(clbck, "also", kb.buttons("back")) 
 
         case "examples":
-            await send_message(clbck.message, "examples", kb.works())
+            await send_message(clbck, "examples", kb.works())
 
         case _:
             await clbck.answer(get_text("not_realize"))
@@ -90,21 +93,22 @@ async def menu_handler(clbck: CallbackQuery, state: FSMContext) -> None:
 
 # Оплата
 async def pay(clbk: CallbackQuery):
-    await send_message(clbk.message, "text_payment")
+    await send_message(clbk, "text_payment")
     await asyncio.sleep(5)
-    await send_message(clbk.message, "test_payment")
+    await send_message(clbk, "test_payment")
     await payment.pay(clbk.from_user.id)
 
 
 # Форматирование текста
 async def formatting(clbk: CallbackQuery):
     await clbk.message.edit_reply_markup()
-    await clbk.message.answer(text=get_text("formatting", hlink("ссылка", "t.me/o_l_ebedev")), reply_markup=kb.buttons("back"), disable_web_page_preview=True)
+    mes_id = await clbk.message.answer(text=get_text("formatting", hlink("ссылка", "t.me/o_l_ebedev")), reply_markup=kb.buttons("back"), disable_web_page_preview=True)
+    add_mes(clbk.from_user.id, mes_id.message_id)
 
 
 # Курс
 async def currence(clbk: CallbackQuery):
-    await send_message(clbk.message, "choose_currency", kb.currency())
+    await send_message(clbk, "choose_currency", kb.currency())
 
     path.join("temp", "shares.png")
 
@@ -116,36 +120,37 @@ async def currency_handler(clbck: CallbackQuery, state: FSMContext) -> None:
     try:
         price = currency.make_graph(data[2], data[1])
 
-        await clbck.message.answer("<b><code>" + data[1] + "</code></b>")
-        await send_message(clbck.message, "price", kb.buttons("back"), None, None, price, photo=path.join("temp", "shares.png"))
+        mes_id = await clbck.message.answer("<b><code>" + data[1] + "</code></b>")
+        add_mes(clbck.from_user.id, mes_id.message_id)
+        await send_message(clbck, "price", kb.buttons("back"), None, None, price, photo=path.join("temp", "shares.png"))
     except:
-        await send_message(clbck.message, "price_error", kb.buttons("back"))
+        await send_message(clbck, "price_error", kb.buttons("back"))
 
 
 # Встроенный браузер
 async def browser(clbk: CallbackQuery):
-    await send_message(clbk.message, "site", kb.site())
+    await send_message(clbk, "site", kb.site())
 
 # Сбор информации
 async def info(clbk: CallbackQuery, state):
-    await send_message(clbk.message, "how_your_name", None, state, UserState.name)
+    await send_message(clbk, "how_your_name", None, state, UserState.name)
 
 # Выбор пола
 @dp.callback_query(F.data.startswith("sex_"))
 async def currency_handler(clbck: CallbackQuery, state: FSMContext) -> None:
     user.users[str(clbck.from_user.id)].sex = clbck.data 
-    await send_message(clbck.message, "write_phone", kb.phone(), state, UserState.phone)
+    await send_message(clbck, "write_phone", kb.phone(), state, UserState.phone)
 
 # Нет питомца
 @dp.callback_query(F.data == "skip_photo", UserState.photo)
 async def photo_handler(clbck: CallbackQuery, state: FSMContext) -> None:
     user.users[str(clbck.from_user.id)].photo = -1 
-    await send_message(clbck.message, "no_photo", None, state, UserState.email)
+    await send_message(clbck, "no_photo", None, state, UserState.email)
 
 # Выбор примера работы
 @dp.callback_query(F.data.startswith("work_"))
 async def work_handler(clbck: CallbackQuery, state: FSMContext) -> None:
-    await send_message(clbck.message, clbck.data, kb.two_buttons("screens", "screens_" + clbck.data[-1], "back", "back"), None, None, get_text("work_add"))
+    await send_message(clbck, clbck.data, kb.two_buttons("screens", "screens_" + clbck.data[-1], "back", "back"), None, None, get_text("work_add"))
 
 
 # Вывод скриншотов
@@ -156,6 +161,7 @@ async def screen_handler(clbck: CallbackQuery, state: FSMContext) -> None:
     files = listdir(path_folder)
 
     photos = [InputMediaPhoto(media=FSInputFile(path=path.join(path_folder, files[file])), caption="photo_" + str(file)) for file in range(len(files))]
-    await clbck.message.answer_media_group(media=photos)
-
-    await send_message(clbck.message, "screens_label", kb.buttons("back"), None, None, get_text("example_works").split("_")[int(num)][4:])
+    mes_id = await clbck.message.answer_media_group(media=photos)
+    [add_mes(clbck.from_user.id, mes.message_id) for mes in mes_id]
+    
+    await send_message(clbck, "screens_label", kb.buttons("back"), None, None, get_text("example_works").split("_")[int(num)][4:])

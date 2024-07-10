@@ -3,6 +3,7 @@ import json
 
 config_file = {}
 messages = {}
+menus = {}
 
 # Загрузка файла окружения
 def load_env():
@@ -58,6 +59,19 @@ def add_mes(id, message_id):
         messages[str(id)].append(message_id)
     else:
         messages[str(id)] = [message_id]
+
+
+# Установка меню
+def set_menu(id, message_id):
+    menus[str(id)] = message_id
+
+
+# Получение меню
+def get_menu(id):
+    if str(id) in menus:
+        return menus[str(id)]
+    else:
+        return 0
 
 
 # Очистка сообщений

@@ -8,6 +8,7 @@ from loader import dp, bot
 async def main() -> None:
 
     await bot.delete_webhook(drop_pending_updates=True)
+    import utils
     await dp.start_polling(bot)
 
 

@@ -1,7 +1,7 @@
 from aiogram import F
 from aiogram.types import Message, PreCheckoutQuery
 from loader import dp, bot
-from config import get_env
+from config import get_env, add_mes
 
 import utils.kb as kb
 from support.messages import get_text, send_message
@@ -16,10 +16,11 @@ async def pre_checkout_query_handler(query: PreCheckoutQuery):
 # Успешная оплата
 @dp.message(F.successful_payment)
 async def successful_payment_handler(msg: Message):
-    await send_message(msg, "succeful_payment", kb.buttons("back"), nodelete=True)
+    await send_message(msg, "succeful_payment", kb.buttons("back"))
 
 
 # Оплата
 async def pay(id):
-    await bot.send_invoice(id, "Проверка оплаты", get_text("description"), "payload", "RUB", 
+    mes_id = await bot.send_invoice(id, "Проверка оплаты", get_text("description"), "payload", "RUB", 
                            [{"label": "Руб", "amount": int(get_env("pay")) * 100}], provider_token=get_env("shop_token"))
+    add_mes(id, mes_id.message_id)

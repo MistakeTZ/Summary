@@ -10,9 +10,6 @@ messages.load_messages()
 
 # Загрузка файлов окружения
 load_env()
-# Загрузка базы данных 
-# load(False)
-
 
 # Создание бота
 bot = Bot(get_env("token"), default=DefaultBotProperties(parse_mode="HTML"))
