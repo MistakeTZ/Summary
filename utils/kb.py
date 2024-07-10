@@ -55,8 +55,8 @@ def menu() -> InlineKeyboardMarkup:
         [InlineKeyboardButton(text=menus[5], callback_data="menu_browser")],
         [InlineKeyboardButton(text=menus[6], callback_data="menu_graph")],
         [InlineKeyboardButton(text=menus[7], callback_data="menu_examples")],
-        [InlineKeyboardButton(text=menus[9], callback_data="menu_help")],
-        [InlineKeyboardButton(text=menus[8], url="t.me/o_l_ebedev")]
+        [InlineKeyboardButton(text=menus[8], callback_data="menu_help")],
+        [InlineKeyboardButton(text=menus[9], url="t.me/o_l_ebedev")]
         ]
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
