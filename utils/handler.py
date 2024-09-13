@@ -21,7 +21,11 @@ from states import UserState
 @dp.message(UserState.email)
 async def profile(msg: Message, state: FSMContext):
     id = msg.from_user.id
-    if not re.fullmatch("([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+", msg.text):
+    if not msg.entities:
+        await send_message(msg, "wrong_email")
+        return
+    email_entity = msg.entities[0]
+    if email_entity.type != "email":
         await send_message(msg, "wrong_email")
         return
     

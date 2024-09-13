@@ -1,5 +1,6 @@
 import asyncio, logging
 import sys
+from database.model import DB
 
 from loader import dp, bot
 
@@ -16,7 +17,7 @@ async def main() -> None:
 async def multiple_tasks():
     
     input_coroutines = [main()] #, broadcast.send_messages(bot)]
-    res = await asyncio.gather(*input_coroutines, return_exceptions=True)
+    res = await asyncio.gather(*input_coroutines)
     return res
 
 
@@ -32,3 +33,8 @@ if __name__ == "__main__":
     except Exception as e:
         print(e)
     print("Exiting")
+
+    try:
+        DB.unload_database()
+    except:
+        print("Database closing failed")
