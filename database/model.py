@@ -27,6 +27,20 @@ class DB():
                          telegram_id bigint not null,
                          registered timestamp
                          )""")
+        
+        cur.execute("""create table if not exists payments (
+                         id integer primary key autoincrement,
+                         telegram_id bigint not null,
+                         have_tz bool default false,
+                         product varchar(255),
+                         payment_id varchar(25),
+                         payment_amount int,
+                         payment_confirmed bool default false,
+                         payment_date timestamp,
+                         provider_payment_charge_id varchar(100),
+                         telegram_payment_charge_id varchar(100),
+                         registered timestamp
+                         )""")
         connection.commit()
 
 

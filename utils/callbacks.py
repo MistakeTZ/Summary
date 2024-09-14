@@ -8,7 +8,7 @@ from loader import dp, bot
 import asyncio
 from os import path, listdir
 
-from config import add_mes, clear_mes, get_menu
+from config import add_mes, clear_mes, get_menu, get_env
 
 from utils import currency
 from utils import payment
@@ -16,21 +16,37 @@ import utils.kb as kb
 import utils.user as user
 from support.messages import get_text, send_message
 from states import UserState
+from database.model import DB
 
 
 # Возвращение в меню
 @dp.callback_query(F.data == "back")
 async def menu_handler(clbck: CallbackQuery, state: FSMContext) -> None:
+    await state.set_state(UserState.default)
     id = clbck.from_user.id
     try:
         await bot.edit_message_reply_markup(chat_id=id, message_id=get_menu(id), reply_markup=kb.menu())
     except:
-        await send_message(clbck, "menu", kb.menu(), state=state, new_state=UserState.default, photo=path.join("support", "assets", "oleg.jpg"), nodelete=True, set_menu=True)
+        await send_message(clbck, "menu", kb.menu(), photo=path.join("support", "assets", "oleg.jpg"), nodelete=True, set_menu=True)
     
     try:
         await bot.delete_messages(id, clear_mes(clbck.from_user.id))
     except:
         pass
+
+
+# Возвращение в меню без очистки истории
+@dp.callback_query(F.data == "back_no_history")
+async def menu_handler(clbck: CallbackQuery, state: FSMContext) -> None:
+    await state.set_state(UserState.default)
+    id = clbck.from_user.id
+    try:
+        clear_mes(id)
+    except:
+        pass
+
+    await send_message(clbck, "menu", kb.menu(), photo=path.join("support", "assets", "oleg.jpg"), nodelete=True, set_menu=True)
+    
 
 
 # Выбран эмодзи
@@ -136,6 +152,28 @@ async def currence(clbk: CallbackQuery):
 # Оплата и поддержка
 async def help(clbk: CallbackQuery):
     await send_message(clbk, "to_pay", kb.buttons("back"))
+
+
+# Оформления заказа
+@dp.callback_query(F.data == "make_zakaz")
+async def zakaz_handler(clbck: CallbackQuery, state: FSMContext) -> None:
+    await send_message(clbck, "write_product", kb.buttons("back"), state, UserState.product)
+
+
+# Есть ли ТЗ
+@dp.callback_query(F.data.startswith("tz_"))
+async def zakaz_handler(clbck: CallbackQuery, state: FSMContext) -> None:
+    tz = clbck.data.split("_")[-1] == "y"
+    user_id = DB.get('select id from payments where telegram_id = ? order by registered desc', [clbck.from_user.id], True)
+    DB.commit('update payments set have_tz = ? where id = ?', [tz, user_id[0]])
+    await send_message(clbck, "need_to_pay", kb.pay_kb(), state, UserState.default, get_env("cost"))
+
+
+# Согласие на оплату
+@dp.callback_query(F.data == "predoplata")
+async def zakaz_handler(clbck: CallbackQuery, state: FSMContext) -> None:
+    user_id = DB.get('select id from payments where telegram_id = ? order by registered desc', [clbck.from_user.id], True)
+    await payment.real_pay(clbck.from_user.id, user_id[0])
 
 
 # Выбор актива

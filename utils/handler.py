@@ -10,7 +10,9 @@ import os
 from config import add_mes
 import re
 import asyncio
+from datetime import datetime
 
+from database.model import DB
 import utils.kb as kb
 import utils.user as user
 from support.messages import send_message, get_text
@@ -87,3 +89,10 @@ async def profile(msg: Message, state: FSMContext):
         await send_message(msg, "license_menu", kb.menu(), None, None, get_text("menu"), nodelete=True, set_menu=True)
     else:
         await send_message(msg, "not_accept", nodelete=True)
+
+
+# Ввод продукта
+@dp.message(UserState.product, F.text)
+async def profile(msg: Message, state: FSMContext):
+    await send_message(msg, "have_TZ", kb.two_buttons("yes", "tz_y", "no", "tz_n"))
+    DB.commit('insert into payments (telegram_id, product, registered) values (?, ?, ?)', [msg.from_user.id, msg.text, datetime.now()])

@@ -61,6 +61,16 @@ def menu() -> InlineKeyboardMarkup:
         ]
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
+
+# Клавиатура оплаты
+def pay_kb() -> InlineKeyboardMarkup:
+    buttons = [[
+        InlineKeyboardButton(text=get_text("predoplata"), callback_data="predoplata"),
+        InlineKeyboardButton(text=get_text("write_me"), url="t.me/o_l_ebedev")],
+        [InlineKeyboardButton(text=get_text("back"), callback_data="back")]]
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
 def currency() -> InlineKeyboardMarkup:
     currencies = get_config("currency")
     keys = list(currencies.keys())

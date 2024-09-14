@@ -9,3 +9,4 @@ class UserState(StatesGroup):
     name = State()
     phone = State()
     photo = State()
+    product = State()
