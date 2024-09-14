@@ -47,16 +47,17 @@ def menu() -> InlineKeyboardMarkup:
     menus = get_text("menu_buttons").split("_")
 
     buttons = [[
-        InlineKeyboardButton(text=menus[0], callback_data="menu_pay"),
-        InlineKeyboardButton(text=menus[1], callback_data="menu_db")],
-        [InlineKeyboardButton(text=menus[2], callback_data="menu_cur"),
-        InlineKeyboardButton(text=menus[3], callback_data="menu_format")],
-        [InlineKeyboardButton(text=menus[4], callback_data="menu_info")],
-        [InlineKeyboardButton(text=menus[5], callback_data="menu_browser")],
-        [InlineKeyboardButton(text=menus[6], callback_data="menu_graph")],
-        [InlineKeyboardButton(text=menus[7], callback_data="menu_examples")],
-        [InlineKeyboardButton(text=menus[8], callback_data="menu_help")],
-        [InlineKeyboardButton(text=menus[9], url="t.me/o_l_ebedev")]
+        InlineKeyboardButton(text=menus[0], callback_data="menu_zakaz")],
+        [InlineKeyboardButton(text=menus[1], callback_data="menu_pay"),
+        InlineKeyboardButton(text=menus[2], callback_data="menu_db")],
+        [InlineKeyboardButton(text=menus[3], callback_data="menu_cur"),
+        InlineKeyboardButton(text=menus[4], callback_data="menu_format")],
+        [InlineKeyboardButton(text=menus[5], callback_data="menu_info")],
+        [InlineKeyboardButton(text=menus[6], callback_data="menu_browser")],
+        [InlineKeyboardButton(text=menus[7], callback_data="menu_graph")],
+        [InlineKeyboardButton(text=menus[8], callback_data="menu_examples")],
+        [InlineKeyboardButton(text=menus[9], callback_data="menu_help")],
+        [InlineKeyboardButton(text=menus[10], url="t.me/o_l_ebedev")]
         ]
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 

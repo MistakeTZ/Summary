@@ -53,6 +53,9 @@ async def menu_handler(clbck: CallbackQuery, state: FSMContext) -> None:
     choice = clbck.data.split("_")[-1]
 
     match choice:
+        case "zakaz":
+            await zakaz(clbck)
+
         case "pay":
             await pay(clbck)
 
@@ -82,6 +85,11 @@ async def menu_handler(clbck: CallbackQuery, state: FSMContext) -> None:
 
         case _:
             await clbck.answer(get_text("not_realize"))
+
+
+# Заказ бота
+async def zakaz(clbk: CallbackQuery):
+    await send_message(clbk, "about_zakaz", kb.two_buttons("make_zakaz", "make_zakaz", "back", "back"))
 
 
 # Оплата
