@@ -8,7 +8,6 @@ from loader import dp, bot
 
 import os
 from config import add_mes
-import re
 import asyncio
 from datetime import datetime
 
@@ -23,15 +22,16 @@ from states import UserState
 @dp.message(UserState.email)
 async def profile(msg: Message, state: FSMContext):
     id = msg.from_user.id
-    if not msg.entities:
-        await send_message(msg, "wrong_email")
-        return
-    email_entity = msg.entities[0]
-    if email_entity.type != "email":
+    email = ""
+    if msg.entities:
+        ent = msg.entities[0]
+        if ent.type == "email":
+            email = msg.text[ent.offset:ent.offset + ent.length]
+    if not email:
         await send_message(msg, "wrong_email")
         return
     
-    user.users[str(id)].email = msg.text
+    user.users[str(id)].email = email
     await send_message(msg, "email_given", None, state, UserState.default)
     await asyncio.sleep(2)
     use = user.users[str(id)]

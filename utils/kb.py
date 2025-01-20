@@ -44,21 +44,27 @@ def phone() -> ReplyKeyboardMarkup:
 
 # Кнопки меню
 def menu() -> InlineKeyboardMarkup:
-    menus = get_text("menu_buttons").split("_")
+    menu_buttons = get_config("menu")
+    next_to_arr = False
+    buttons = []
 
-    buttons = [[
-        InlineKeyboardButton(text=menus[0], callback_data="menu_zakaz")],
-        [InlineKeyboardButton(text=menus[1], callback_data="menu_pay"),
-        InlineKeyboardButton(text=menus[2], callback_data="menu_db")],
-        [InlineKeyboardButton(text=menus[3], callback_data="menu_cur"),
-        InlineKeyboardButton(text=menus[4], callback_data="menu_format")],
-        [InlineKeyboardButton(text=menus[5], callback_data="menu_info")],
-        [InlineKeyboardButton(text=menus[6], callback_data="menu_browser")],
-        [InlineKeyboardButton(text=menus[7], callback_data="menu_graph")],
-        [InlineKeyboardButton(text=menus[8], callback_data="menu_examples")],
-        [InlineKeyboardButton(text=menus[9], callback_data="menu_help")],
-        [InlineKeyboardButton(text=menus[10], url="t.me/o_l_ebedev")]
-        ]
+    for button_name in menu_buttons:
+        button = menu_buttons[button_name]
+        if button["size"] == 1:
+            if not next_to_arr:
+                next_to_arr = True
+                buttons.append([])
+            else:
+                next_to_arr = False
+        else:
+            next_to_arr = False
+            buttons.append([])
+
+        buttons[-1].append(InlineKeyboardButton(text=button["name"],
+                        callback_data=f"menu_{button_name}" if
+                        "function" in button else None,
+                        url=button["url"] if "url" in button else None))
+
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 

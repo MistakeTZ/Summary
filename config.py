@@ -2,6 +2,7 @@ import os
 import json
 from dotenv import load_dotenv
 
+
 config_file = {}
 messages = {}
 menus = {}
@@ -35,17 +36,6 @@ def load_config():
     global config_file
     with open(os.path.join("support", "config.json"), encoding='utf-8') as file:
         config_file = json.load(file)
-
-# Добавление пользователя
-def add_user(id):
-    global config_file
-    if id in config_file["users"]:
-        return True
-    else:
-        config_file["users"].append(id)
-        with open(os.path.join("support", "config.json"), 'w', encoding='utf-8') as file:
-            json.dump(config_file, file, indent=4)
-        return False
 
 
 # Добавление сообщения

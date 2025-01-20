@@ -1,8 +1,4 @@
 {
-    "users": [
-        1900878938,
-        944353409
-    ],
     "currency": {
         "MOEX": "\u041c\u043e\u0441\u043a\u043e\u0432\u0441\u043a\u0430\u044f \u0431\u0438\u0440\u0436\u0430",
         "GAZP": "\u0413\u0430\u0437\u043f\u0440\u043e\u043c",
@@ -10,5 +6,57 @@
         "SBER": "\u0421\u0431\u0435\u0440 \u0411\u0430\u043d\u043a",
         "LKOH": "\u041b\u0443\u043a\u043e\u0439\u043b",
         "ROSN": "\u0420\u043e\u0441\u043d\u0435\u0444\u0442\u044c"
+    },
+    "menu": {
+        "support": {
+            "name": "Оплата разработки и поддержка бота",
+            "size": 2,
+            "function": "help"
+        },
+        "payment": {
+            "name": "Оплата",
+            "size": 1,
+            "function": "pay"
+        },
+        "database": {
+            "name": "Базы данных",
+            "size": 1,
+            "function": "database"
+        },
+        "stock_price": {
+            "name": "Курс акций",
+            "size": 1,
+            "function": "currence"
+        },
+        "format": {
+            "name": "Форматирование",
+            "size": 1,
+            "function": "formatting"
+        },
+        "info": {
+            "name": "Сбор информации",
+            "size": 1,
+            "function": "info"
+        },
+        "browser": {
+            "name": "Встроенный браузер",
+            "size": 1,
+            "function": "browser"
+        },
+        "graphs": {
+            "name": "Создание графиков",
+            "size": 2,
+            "function": "graph"
+        },
+        "examples": {
+            "name": "Примеры работ",
+            "size": 2,
+            "function": "examples"
+        },
+        "me": {
+            "name": "Связь со мной",
+            "size": 2,
+            "url": "t.me/o_l_ebedev"
+        }
     }
 }

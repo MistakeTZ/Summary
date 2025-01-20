@@ -25,6 +25,7 @@ class DB():
         cur.execute("""create table if not exists users (
                          id integer primary key autoincrement,
                          telegram_id bigint not null,
+                         name text not null,
                          registered timestamp
                          )""")
         
