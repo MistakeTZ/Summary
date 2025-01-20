@@ -2,7 +2,7 @@ from aiogram.filters import Command, CommandStart, Filter
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import hlink
-from loader import dp, bot
+from loader import dp
 from os import path
 import asyncio
 from datetime import datetime
@@ -12,6 +12,7 @@ from config import add_mes
 from utils import kb
 from support.messages import send_message, get_text
 from states import UserState
+from .protfolio import send_portfolio
 
 
 # Добавление в отправленные
@@ -67,4 +68,9 @@ async def send_message_with_times(message, name, delay, msg: Message):
         await asyncio.sleep(delay)
 
     await new_mes.edit_text(string)
-    
+
+
+# Команда портфолио
+@dp.message(Command("portfolio"))
+async def portfolio_command(msg: Message, state: FSMContext) -> None:
+    await send_portfolio(msg.from_user.id)

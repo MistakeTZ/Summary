@@ -17,6 +17,7 @@ import utils.user as user
 from support.messages import get_text, send_message
 from states import UserState
 from database.model import DB
+from .protfolio import send_portfolio
 
 
 # Возвращение в меню
@@ -189,21 +190,8 @@ async def photo_handler(clbck: CallbackQuery, state: FSMContext) -> None:
     user.users[str(clbck.from_user.id)].photo = -1 
     await send_message(clbck, "no_photo", None, state, UserState.email)
 
-# Выбор примера работы
-@dp.callback_query(F.data.startswith("work_"))
-async def work_handler(clbck: CallbackQuery, state: FSMContext) -> None:
-    await send_message(clbck, clbck.data, kb.two_buttons("screens", "screens_" + clbck.data[-1], "back", "back"), None, None, get_text("work_add"))
 
-
-# Вывод скриншотов
-@dp.callback_query(F.data.startswith("screens_"))
-async def screen_handler(clbck: CallbackQuery, state: FSMContext) -> None:
-    num = clbck.data[-1]
-    path_folder = path.join("support", "assets", "photos_" + num)
-    files = listdir(path_folder)
-
-    photos = [InputMediaPhoto(media=FSInputFile(path=path.join(path_folder, files[file])), caption="photo_" + str(file)) for file in range(len(files))]
-    mes_id = await clbck.message.answer_media_group(media=photos)
-    [add_mes(clbck.from_user.id, mes.message_id) for mes in mes_id]
-
-    await send_message(clbck, "screens_label", kb.buttons("back"), None, None, get_text("example_works").split("_")[int(num)][4:])
+# Примеры
+async def examples(clbk: CallbackQuery, *args):
+    await clbk.message.edit_reply_markup()
+    await send_portfolio(clbk.from_user.id)
