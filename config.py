@@ -16,18 +16,27 @@ def load_env():
 def get_env(key):
     return os.getenv(key)
 
+
 # Чтение из файла конфигурации
-def get_config(*args, **kwards):
-    if not "config" in kwards:
-        if args[0] in config_file:
-            if len(args) == 1:
-                return config_file[args[0]]
-            return get_config(*args[1:], config=config_file[args[0]])
-    else:
-        if args[0] in kwards["config"]:
-            if len(args) == 1:
-                return kwards["config"][args[0]]
-            return get_config(*args[1:], config=kwards["config"][args[0]])
+def get_config(*args, config=None):
+    """
+    Gets a value from the config based on a path of keys.
+
+    Args:
+        *args: The keys to access in the config.
+        config: The config to access. If not provided, the global config is used.
+
+    Returns:
+        The value at the provided path, or False if the path does not exist.
+    """
+    if config is None:
+        config = config_file
+
+    if args[0] in config:
+        if len(args) == 1:
+            return config[args[0]]
+        return get_config(*args[1:], config=config[args[0]])
+
     return False
         
 

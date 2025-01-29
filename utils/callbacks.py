@@ -91,7 +91,7 @@ async def zakaz(clbk: CallbackQuery, *args):
 # Оплата
 async def pay(clbk: CallbackQuery, *args):
     await send_message(clbk, "text_payment")
-    await asyncio.sleep(5)
+    await asyncio.sleep(2)
     await send_message(clbk, "test_payment")
     await payment.pay(clbk.from_user.id)
 
@@ -112,7 +112,7 @@ async def graph(clbck: CallbackQuery, *args):
     mes_id = await clbck.message.answer_media_group(media=photos)
     [add_mes(clbck.from_user.id, mes.message_id) for mes in mes_id]
 
-    await asyncio.sleep(4)
+    await asyncio.sleep(2)
     await send_message(clbck, "also", kb.buttons("back")) 
 
 
