@@ -25,11 +25,12 @@ from .protfolio import send_portfolio
 async def menu_handler(clbck: CallbackQuery, state: FSMContext) -> None:
     await state.set_state(UserState.default)
     id = clbck.from_user.id
+    path_to_file = path.join("support", "assets", "oleg.jpg")
     try:
         await bot.edit_message_reply_markup(chat_id=id, message_id=get_menu(id), reply_markup=kb.menu())
     except:
         await send_message(clbck, "menu", kb.menu(),
-                           state=state, new_state=UserState.default, photo=path.join("support", "assets", "oleg.jpg"),
+                           state=state, new_state=UserState.default, photo=path_to_file,
                            nodelete=True, set_menu=True)
     
     try:

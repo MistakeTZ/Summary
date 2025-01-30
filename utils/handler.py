@@ -85,7 +85,7 @@ async def profile(msg: Message, state: FSMContext):
         await asyncio.sleep(1)
 
         mes_id = await msg.answer_photo(photo, reply_markup=ReplyKeyboardRemove())
-        add_mes(msg.from_user.id, mes_id.message_id)
+        # add_mes(msg.from_user.id, mes_id.message_id)
         await send_message(msg, "license_menu", kb.menu(), None, None, get_text("menu"), nodelete=True, set_menu=True)
     else:
         await send_message(msg, "not_accept", nodelete=True)
