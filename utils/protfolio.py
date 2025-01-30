@@ -4,32 +4,28 @@ from aiogram.types import FSInputFile
 from aiogram.fsm.context import FSMContext
 from aiogram.types.input_media_photo import InputMediaPhoto
 
+from config import get_config
 from os import path, listdir
 from support.messages import get_text, add_mes, send_message
 from loader import bot, dp
 from . import kb
 
 
-async def send_portfolio(user_id):
-    mes = await bot.send_message(user_id, get_text("examples"), kb.works())
-    add_mes(user_id, mes.message_id)
+async def send_portfolio(user_id, page=0, previous=None):
+    cases = get_config("cases")
+    page = 0 if page >= len(cases) else page
+    page = len(cases) - 1 if page < 0 else page
+    now_case = cases[page]
+    link = "" if "link" not in now_case else get_text("case_link", now_case["link"])
+    
+    image = path.join("support", "assets", now_case["image"])
 
-
-# Выбор примера работы
-@dp.callback_query(F.data.startswith("work_"))
-async def work_handler(clbck: CallbackQuery, state: FSMContext) -> None:
-    await send_message(clbck, clbck.data, kb.two_buttons("screens", "screens_" + clbck.data[-1], "back", "back"), None, None, get_text("work_add"))
-
-
-# Вывод скриншотов
-@dp.callback_query(F.data.startswith("screens_"))
-async def screen_handler(clbck: CallbackQuery, state: FSMContext) -> None:
-    num = clbck.data[-1]
-    path_folder = path.join("support", "assets", "photos_" + num)
-    files = listdir(path_folder)
-
-    photos = [InputMediaPhoto(media=FSInputFile(path=path.join(path_folder, files[file])), caption="photo_" + str(file)) for file in range(len(files))]
-    mes_id = await clbck.message.answer_media_group(media=photos)
-    [add_mes(clbck.from_user.id, mes.message_id) for mes in mes_id]
-
-    await send_message(clbck, "screens_label", kb.buttons("back"), None, None, get_text("example_works").split("_")[int(num)][4:])
+    if previous:
+        media = InputMediaPhoto(media=FSInputFile(image), caption=get_text("case",
+                            now_case["name"], now_case["description"], link))
+        await bot.edit_message_media(chat_id=user_id, message_id=previous, media=media, reply_markup=kb.works(page, len(cases)))
+    else:
+        mes = await bot.send_photo(user_id, photo=FSInputFile(image),
+                caption=get_text("case", now_case["name"], now_case["description"],
+                                link), reply_markup=kb.works(page, len(cases)))
+        add_mes(user_id, mes.message_id)

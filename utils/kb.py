@@ -89,11 +89,10 @@ def currency() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-def works() -> InlineKeyboardMarkup:
-    works = get_text("example_works").split("_")
-
-    buttons = [[InlineKeyboardButton(text=works[0], callback_data="work_0")], [InlineKeyboardButton(text=works[1], callback_data="work_1")], 
-               [InlineKeyboardButton(text=works[2], callback_data="work_2")], [InlineKeyboardButton(text=works[3], callback_data="work_3")]]
+def works(page, pages_count) -> InlineKeyboardMarkup:
+    buttons = [[InlineKeyboardButton(text="<", callback_data=f"portfolio_{page - 1}"), 
+                InlineKeyboardButton(text=f"{page + 1}/{pages_count}", callback_data="_"),
+                InlineKeyboardButton(text=">", callback_data=f"portfolio_{page + 1}")]]
 
     buttons.append([InlineKeyboardButton(text=get_text("back"), callback_data="back")])
     return InlineKeyboardMarkup(inline_keyboard=buttons)

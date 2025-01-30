@@ -116,7 +116,6 @@ async def graph(clbck: CallbackQuery, *args):
     await send_message(clbck, "also", kb.buttons("back")) 
 
 
-
 # Форматирование текста
 async def formatting(clbk: CallbackQuery, *args):
     await clbk.message.edit_reply_markup()
@@ -195,3 +194,10 @@ async def photo_handler(clbck: CallbackQuery, state: FSMContext) -> None:
 async def examples(clbk: CallbackQuery, *args):
     await clbk.message.edit_reply_markup()
     await send_portfolio(clbk.from_user.id)
+
+
+# Следующая страница портфолио
+@dp.callback_query(F.data.startswith("portfolio_"))
+async def currency_handler(clbck: CallbackQuery, state: FSMContext) -> None:
+    await send_portfolio(clbck.from_user.id, int(
+        clbck.data.split("_")[-1]), previous=clbck.message.message_id)
