@@ -9,14 +9,17 @@ from loader import dp, bot
 async def main() -> None:
 
     await bot.delete_webhook(drop_pending_updates=True)
-    import utils
     await dp.start_polling(bot)
+
+    raise KeyboardInterrupt
 
 
 # Одновременное выполнение нескольких асинхронных функций
 async def multiple_tasks():
+    from webhook import run_api
+    from utils.protfolio import send_form
     
-    input_coroutines = [main()] #, broadcast.send_messages(bot)]
+    input_coroutines = [main(), run_api(send_form)]
     res = await asyncio.gather(*input_coroutines)
     return res
 
