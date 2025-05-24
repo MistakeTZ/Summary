@@ -12,7 +12,7 @@ async def handle_json(request: Request):
         await send_request(data)
     except Exception as e:
         return JSONResponse(content={"status": "failed", "error": str(e)}, status_code=400)
-    return {"status": "received"}
+    return JSONResponse(content={"status": "success", "message": "Заявка успешно отправлена"})
 
 async def run_api(log_func):
     global send_request
