@@ -19,7 +19,7 @@ async def multiple_tasks():
     # Загрузка обработчика команд
     from tasks import repetition
 
-    input_coroutines = [main(), repetition.sender.messages()]
+    input_coroutines = [main(), repetition.send_messages()]
     res = await asyncio.gather(*input_coroutines)
     return res
 

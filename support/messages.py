@@ -1,4 +1,5 @@
 import abc
+import asyncio
 from os.path import exists, join
 
 from aiogram import Bot
@@ -32,7 +33,34 @@ class MessageSender:
     # Отправка сообщения пользователю
     async def message(self, chat_id: int, key: str, reply_markup=None, *args):
         text = self.text(key, *args)
-        await self.bot.sender.message(chat_id, text, reply_markup=reply_markup)
+        await self.bot.send_message(chat_id, text, reply_markup=reply_markup)
+
+    # Отправить сообщение с задержками между символами
+    async def broadcasting_message(
+        self,
+        chat_id: int,
+        delay: float,
+        key: str,
+        reply_markup=None,
+        *args,
+    ):
+        text = self.text(key, *args)
+        mes = await self.bot.send_message(
+            chat_id,
+            text[:2],
+            reply_markup=reply_markup,
+            disable_web_page_preview=True,
+        )
+
+        for i in range(4, len(text), 2):
+            await asyncio.sleep(delay)
+            try:
+                await mes.edit_text(
+                    text[:i],
+                    reply_markup=reply_markup,
+                )
+            except:
+                pass
 
     # Изменение сообщения
     async def edit_message(
