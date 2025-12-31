@@ -100,12 +100,8 @@ class Payment(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     telegram_id = Column(Integer, nullable=False)
-    have_tz = Column(Boolean, nullable=False, default=False)
     product = Column(String(255), nullable=True)
-    payment_id = Column(String(25), nullable=True)
     payment_amount = Column(Integer, nullable=True)
-    payment_confirmed = Column(Boolean, nullable=False, default=False)
-    payment_date = Column(DateTime, nullable=True)
     provider_payment_charge_id = Column(String(100), nullable=True)
     telegram_payment_charge_id = Column(String(100), nullable=True)
     registered = Column(

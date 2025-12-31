@@ -8,57 +8,51 @@ from aiogram.types.callback_query import CallbackQuery
 from aiogram.types.input_media_photo import InputMediaPhoto
 from aiogram.utils.markdown import hlink
 
-import handlers.user as user
 from database.model import User
-from handlers import currency, payment
 from tasks import kb
 from tasks.config import get_config
-from tasks.loader import bot, dp, sender
+from tasks.loader import bot, dp, sender, session
 from tasks.states import UserState
-from utils.protfolio import send_portfolio
+from utils import currency, payment
+from utils.menu import send_menu
+from utils.protfolio import send_project
+
+
+@dp.callback_query(F.data == "confirm_license")
+async def confirm_license(clbck: CallbackQuery):
+    user_id = clbck.from_user.id
+    await sender.edit_message(
+        clbck.message,
+        "license",
+        None,
+        sender.text("accepted"),
+    )
+    user = session.query(User).filter_by(telegram_id=user_id).first()
+    if user:
+        user.get_license = True
+        session.commit()
+
+    await send_menu(user_id)
+    await asyncio.sleep(2)
+    await clbck.message.delete()
+
+
+@dp.callback_query(F.data.startswith("project"))
+async def project_handler(clbck: CallbackQuery):
+    data = clbck.data.split("_")
+    await send_project(
+        clbck.from_user.id,
+        int(data[1]),
+        int(data[2]),
+        clbck.message,
+    )
 
 
 # Возвращение в меню
 @dp.callback_query(F.data == "back")
 async def menu_handler(clbck: CallbackQuery, state: FSMContext) -> None:
-    await state.set_state(UserState.default)
-    id = clbck.from_user.id
-    path_to_file = path.join("support", "assets", "oleg.jpg")
-    try:
-        await bot.edit_message_reply_markup(
-            chat_id=id, message_id=get_menu(id), reply_markup=kb.menu()
-        )
-    except:
-        await sender.message(
-            clbck,
-            "menu",
-            kb.menu(),
-            state=state,
-            new_state=UserState.default,
-            photo=path_to_file,
-            nodelete=True,
-            set_menu=True,
-        )
-
-
-# Возвращение в меню без очистки истории
-@dp.callback_query(F.data == "back_no_history")
-async def menu_handler(clbck: CallbackQuery, state: FSMContext) -> None:
-    await state.set_state(UserState.default)
-    id = clbck.from_user.id
-    try:
-        clear_mes(id)
-    except:
-        pass
-
-    await sender.message(
-        clbck,
-        "menu",
-        kb.menu(),
-        photo=path.join("support", "assets", "oleg.jpg"),
-        nodelete=True,
-        set_menu=True,
-    )
+    await send_menu(clbck.from_user.id)
+    await clbck.message.delete()
 
 
 # Выбран эмодзи
@@ -102,14 +96,6 @@ async def zakaz(clbk: CallbackQuery, *args):
     await sender.message(
         clbk, "about_zakaz", kb.two_buttons("make_zakaz", "make_zakaz", "back", "back")
     )
-
-
-# Оплата
-async def pay(clbk: CallbackQuery, *args):
-    await sender.message(clbk, "text_payment")
-    await asyncio.sleep(2)
-    await sender.message(clbk, "test_payment")
-    await payment.pay(clbk.from_user.id)
 
 
 # Базы данных

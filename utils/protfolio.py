@@ -16,52 +16,85 @@ async def send_project(
     photo_number=0,
     prevoius_message: Message = None,
 ):
+    project_count = session.query(Project).count()
+    if project_number == -1:
+        project_number = project_count - 1
+    elif project_number == project_count:
+        project_number = 0
+
     project = (
         session.query(Project)
-        .order_by(desc(Project.order))  # Or Project.order.desc()
+        .order_by(desc(Project.order))
         .offset(project_number)
         .limit(1)
         .first()
     )
-    if not project:
-        project = session.query(Project).order_by("-order").first()
 
     if project.photos:
         if photo_number >= len(project.photos):
             photo_number = 0
-        else:
+        elif photo_number == -1:
             photo_number = len(project.photos) - 1
         photo = project.photos[photo_number]
     else:
         photo = None
 
+    args = get_project_args(project)
+
     if prevoius_message:
         if bool(prevoius_message.photo) == bool(photo):
-            if not photo:
-                pass
+            if photo:
+                await prevoius_message.edit_media(
+                    InputMediaPhoto(
+                        media=photo.photo_id,
+                        caption=sender.text("project", *args),
+                    ),
+                    reply_markup=kb.project(
+                        project_number,
+                        photo_number,
+                        len(project.photos),
+                    ),
+                )
             else:
-                prevoius_message.edit_text(
-                    get_project_text(project),
-                    kb.project(),
+                sender.edit_message(
+                    prevoius_message,
+                    "project",
+                    kb.project(project_number),
+                    *args,
                 )
             return
         else:
             await prevoius_message.delete()
 
     if photo:
-        pass
+        await sender.send_cached_media(
+            user_id,
+            "photo",
+            photo.photo_id,
+            "project",
+            kb.project(
+                project_number,
+                photo_number,
+                len(project.photos),
+            ),
+            *args,
+        )
     else:
-        await bot.send_message(user_id, get_project_text(project))
+        await sender.message(
+            user_id,
+            "project",
+            kb.project(project_number),
+            *args,
+        )
 
 
-def get_project_text(project: Project):
-    return f"""
-<b>{project.name}</b>
-{project.description}
-{"\nСсылка на проект: " + project.link if project.link else ""}
-
-<blockquote expandable>{"\n".join([tool.tool.name for tool in project.tools])}</blockquote>
-    """
+def get_project_args(project: Project):
+    return [
+        project.name,
+        project.description,
+        "\n\nСсылка на проект: " + project.link if project.link else "",
+        "\n".join([tool.tool.name for tool in project.tools]),
+    ]
 
 
 async def send_portfolio(user_id, page=0, previous=None):

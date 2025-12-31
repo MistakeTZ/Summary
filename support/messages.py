@@ -13,9 +13,10 @@ class MessageSender:
     messages = {}
     bot: Bot
 
-    def __init__(self, bot) -> None:
+    def __init__(self, bot, manager) -> None:
         """Определение бота."""
         self.bot = bot
+        self.manager = manager
 
     @abc.abstractmethod
     def load_messages(self, path_to_file: str = None):
@@ -95,14 +96,7 @@ class MessageSender:
             "reply_markup": reply_markup,
         }
 
-        if media_type == "photo":
-            await self.bot.send_photo(**kwargs)
-        elif media_type == "video":
-            await self.bot.send_video(**kwargs)
-        elif media_type == "audio":
-            await self.bot.send_audio(**kwargs)
-        elif media_type == "document":
-            await self.bot.send_document(**kwargs)
+        await getattr(self.bot, f"send_{media_type}")(**kwargs)
 
     # Открытие медиа
     async def send_media(
@@ -129,7 +123,7 @@ class MessageSender:
         if path:
             path = join(path, media)
         else:
-            path = join("support", "media", media)
+            path = join("support", "assets", media)
 
         media_file = FSInputFile(path=path, filename=name)
         kwargs = {
@@ -139,15 +133,11 @@ class MessageSender:
             "reply_markup": reply_markup,
         }
 
-        match media_type:
-            case "photo":
-                await self.bot.send_photo(**kwargs)
-            case "video":
-                await self.bot.send_video(**kwargs)
-            case "audio":
-                await self.bot.send_audio(**kwargs)
-            case "document":
-                await self.bot.send_document(**kwargs)
+        try:
+            await getattr(self.bot, f"send_{media_type}")(**kwargs)
+        except Exception as e:
+            await self.bot.send_message(self.manager, str(e))
+            raise e
 
 
 # Загрузчик сообщений из JSON файла

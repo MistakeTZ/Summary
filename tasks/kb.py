@@ -197,3 +197,33 @@ def menu() -> ReplyKeyboardMarkup:
         one_time_keyboard=False,
         resize_keyboard=True,
     )
+
+
+def project(project_number, photo_number=None, max_photos=0):
+    keyboard = []
+    if max_photos > 1:
+        keyboard.append(
+            [
+                InlineKeyboardButton(
+                    text=f"Следующее фото {photo_number + 1}/{max_photos}",
+                    callback_data=f"project_{project_number}_{photo_number + 1}",
+                ),
+            ],
+        )
+
+    keyboard.append(
+        [
+            InlineKeyboardButton(
+                text="<",
+                callback_data=f"project_{project_number - 1}_0",
+            ),
+            InlineKeyboardButton(
+                text=">",
+                callback_data=f"project_{project_number + 1}_0",
+            ),
+        ]
+    )
+
+    return InlineKeyboardMarkup(
+        inline_keyboard=keyboard,
+    )

@@ -2,4 +2,3 @@
 from . import commands
 from . import callbacks
 from . import handler
-from . import payment

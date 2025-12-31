@@ -4,15 +4,28 @@ from datetime import datetime
 
 from aiogram import F
 from aiogram.fsm.context import FSMContext
-from aiogram.types import FSInputFile, Message, ReplyKeyboardRemove
-from aiogram.types.reaction_type_emoji import ReactionTypeEmoji
+from aiogram.types import Message, ReplyKeyboardRemove
 from aiogram.utils.markdown import hlink
 
-import handlers.user as user
 import tasks.kb as kb
-from database.model import User
 from tasks.loader import bot, dp, sender
 from tasks.states import UserState
+from utils.payment import pay
+from utils.protfolio import send_project
+
+
+@dp.message(F.text == "Мои кейсы")
+async def cases_handler(msg: Message):
+    await send_project(msg.from_user.id)
+
+
+@dp.message(F.text == "Тест оплаты")
+async def payment_text_handler(msg: Message):
+    user_id = msg.from_user.id
+    await sender.message(user_id, "text_payment")
+    await asyncio.sleep(2)
+    await sender.message(user_id, "test_payment")
+    await pay(user_id)
 
 
 # Установка электронной почты
@@ -80,29 +93,6 @@ async def profile(msg: Message, state: FSMContext):
     if msg.photo:
         user.users[str(id)].photo = msg.message_id
         await sender.message(msg, "photo_sended", None, state, UserState.email)
-
-
-# Подтверждение лицензии
-@dp.message(UserState.license)
-async def profile(msg: Message, state: FSMContext):
-    if msg.text.lower() == sender.text("accept").lower():
-        await msg.react([ReactionTypeEmoji(emoji="👍")])
-        photo = FSInputFile(path=os.path.join("support", "assets", "oleg.jpg"))
-        await asyncio.sleep(1)
-
-        mes_id = await msg.answer_photo(photo, reply_markup=ReplyKeyboardRemove())
-        await sender.message(
-            msg,
-            "license_menu",
-            kb.menu(),
-            None,
-            None,
-            sender.text("menu"),
-            nodelete=True,
-            set_menu=True,
-        )
-    else:
-        await sender.message(msg, "not_accept", nodelete=True)
 
 
 # Ввод продукта

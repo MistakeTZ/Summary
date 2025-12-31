@@ -17,7 +17,7 @@ session = init_db()
 bot = Bot(settings.token, default=DefaultBotProperties(parse_mode="HTML"))
 dp = Dispatcher()
 
-sender: MessageSender = JSONMessageSender(bot)
+sender: MessageSender = JSONMessageSender(bot, settings.manager)
 
 # Загрузка сообщений
 sender.load_messages()

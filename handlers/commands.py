@@ -1,6 +1,4 @@
-import asyncio
 import logging
-from os import path
 
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
@@ -12,7 +10,7 @@ from tasks.config import get_config
 from tasks.loader import dp, sender, session
 from tasks.states import UserState
 from utils.menu import send_menu
-from utils.protfolio import send_portfolio, send_project
+from utils.protfolio import send_project
 
 
 @dp.message(CommandStart())
@@ -66,19 +64,11 @@ async def command_start_handler(msg: Message, state: FSMContext) -> None:
 # Команда меню
 @dp.message(Command("menu"))
 async def command_settings(msg: Message, state: FSMContext) -> None:
-    await sender.message(
-        msg,
-        "menu",
-        kb.menu(),
-        state=state,
-        new_state=UserState.default,
-        photo=path.join("support", "assets", "oleg.jpg"),
-        nodelete=True,
-        set_menu=True,
-    )
+    await send_menu(msg.from_user.id)
+    await msg.delete()
 
 
 # Команда портфолио
 @dp.message(Command("portfolio"))
 async def portfolio_command(msg: Message, state: FSMContext) -> None:
-    await send_portfolio(msg.from_user.id)
+    await send_project(msg.from_user.id)
