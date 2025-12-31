@@ -1,13 +1,13 @@
-import asyncio, logging
+import asyncio
+import logging
 import sys
-from database.model import DB
-
-from loader import dp, bot
 
 
 # Запуск бота
 async def main() -> None:
+    from tasks.config import set_bot_commands
 
+    await set_bot_commands(bot)
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 
@@ -16,28 +16,25 @@ async def main() -> None:
 
 # Одновременное выполнение нескольких асинхронных функций
 async def multiple_tasks():
-    from webhook import run_api
-    from utils.protfolio import send_form
-    
-    input_coroutines = [main(), run_api(send_form)]
+    # Загрузка обработчика команд
+    from tasks import repetition
+
+    input_coroutines = [main(), repetition.sender.messages()]
     res = await asyncio.gather(*input_coroutines)
     return res
 
 
 # Запуск и остановка бота
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+    logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
+
+    # Загрузка всех файлов и модулей
+    from tasks.loader import bot, dp
+
     try:
         loop.run_until_complete(multiple_tasks())
     except KeyboardInterrupt:
         pass
-    except Exception as e:
-        print(e)
-    print("Exiting")
-
-    try:
-        DB.unload_database()
-    except:
-        print("Database closing failed")
+    logging.info("Exiting")

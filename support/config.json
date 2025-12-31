@@ -7,58 +7,6 @@
         "LKOH": "\u041b\u0443\u043a\u043e\u0439\u043b",
         "ROSN": "\u0420\u043e\u0441\u043d\u0435\u0444\u0442\u044c"
     },
-    "menu": {
-        "examples": {
-            "name": "Мои кейсы",
-            "size": 2,
-            "function": "examples"
-        },
-        "payment": {
-            "name": "Тест оплаты",
-            "size": 1,
-            "function": "pay"
-        },
-        "database": {
-            "name": "Базы данных",
-            "size": 1,
-            "function": "database"
-        },
-        "stock_price": {
-            "name": "Курс акций",
-            "size": 1,
-            "function": "currence"
-        },
-        "format": {
-            "name": "Форматирование",
-            "size": 1,
-            "function": "formatting"
-        },
-        "info": {
-            "name": "Сбор информации",
-            "size": 1,
-            "function": "info"
-        },
-        "browser": {
-            "name": "Встроенный браузер",
-            "size": 1,
-            "function": "browser"
-        },
-        "graphs": {
-            "name": "Создание графиков",
-            "size": 2,
-            "function": "graph"
-        },
-        "support": {
-            "name": "Оплата разработки и поддержка бота",
-            "size": 2,
-            "function": "help"
-        },
-        "me": {
-            "name": "Связь со мной",
-            "size": 2,
-            "url": "t.me/o_l_ebedev"
-        }
-    },
     "cases": [
         {
             "name": "Прохождение тестов",

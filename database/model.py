@@ -1,88 +1,152 @@
-import sqlite3
-from sqlite3 import Connection, Cursor
-from os import path
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    create_engine,
+    func,
+)
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship, sessionmaker
 
-connection: Connection
-cur: Cursor
-
-
-class DB():
-    
-    def load_database(dbname = "db.sqlite3"):
-        global connection, cur
-
-        try:
-            dbname = path.join("database", dbname)
-            connection = sqlite3.connect(dbname)
-            cur = connection.cursor()
-
-            print("Database connected")
-        except:
-            raise ValueError("Connection to database failed")
+# Base model
+Base = declarative_base()
 
 
-    def create_tables():
-        cur.execute("""create table if not exists users (
-                         id integer primary key autoincrement,
-                         telegram_id bigint not null,
-                         name text not null,
-                         registered timestamp
-                         )""")
-        
-        cur.execute("""create table if not exists payments (
-                         id integer primary key autoincrement,
-                         telegram_id bigint not null,
-                         have_tz bool default false,
-                         product varchar(255),
-                         payment_id varchar(25),
-                         payment_amount int,
-                         payment_confirmed bool default false,
-                         payment_date timestamp,
-                         provider_payment_charge_id varchar(100),
-                         telegram_payment_charge_id varchar(100),
-                         registered timestamp
-                         )""")
-        connection.commit()
+# Users model
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(  # noqa VNE003
+        Integer,
+        primary_key=True,
+        autoincrement=True,
+    )
+    telegram_id = Column(Integer, nullable=False, unique=True)
+    name = Column(String, nullable=False)
+    username = Column(String)
+    role = Column(String, nullable=False, default="user")
+    restricted = Column(Boolean, nullable=False, default=False)
+    registered = Column(
+        DateTime,
+        nullable=False,
+        server_default=func.current_timestamp(),
+    )
 
 
-    def select(by_value, field="telegram_id", table="users"):
-        return DB.get("select * from {} where {} = ?".format(table, field), [by_value], True)
-    
+class Project(Base):
+    __tablename__ = "projects"
 
-    def get(prompt, values=[], one=False):
-        try:
-            cur.execute(prompt, values)
-            if one:
-                return cur.fetchone()
-            else:
-                return cur.fetchall()
-        except Exception as e:
-            print(e)
-            return False
-        
+    id = Column(  # noqa VNE003
+        Integer,
+        primary_key=True,
+        autoincrement=True,
+    )
+    name = Column(String, nullable=False)
+    link = Column(String, nullable=True)
+    description = Column(String, nullable=False)
+    order = Column(Integer, default=0)
 
-    def get_dict(prompt, values=[], one=False):
-        try:
-            cur.execute(prompt, values)
-            desc = [row[0] for row in cur.description]
-            if one:
-                return dict(zip(desc, cur.fetchone()))
-            else:
-                return [dict(zip(desc, res)) for res in cur.fetchall()]
-        except Exception as e:
-            print(e)
-            return False
-        
-
-    def commit(prompt, values=[]):
-        try:
-            cur.execute(prompt, values)
-            connection.commit()
-            return True
-        except Exception as e:
-            print(e)
-            return False
+    photos = relationship("ProjectPhoto", back_populates="project")
+    tools = relationship("ProjectTool", back_populates="project")
 
 
-    def unload_database():
-        connection.close()
+class ProjectPhoto(Base):
+    __tablename__ = "project_photos"
+
+    id = Column(  # noqa VNE003
+        Integer,
+        primary_key=True,
+        autoincrement=True,
+    )
+    photo_id = Column(String, nullable=False)
+    project_id = Column(ForeignKey("projects.id"), nullable=False)
+
+    project = relationship("Project", back_populates="photos")
+
+
+class Tool(Base):
+    __tablename__ = "tools"
+
+    id = Column(  # noqa VNE003
+        Integer,
+        primary_key=True,
+        autoincrement=True,
+    )
+    name = Column(String, nullable=False)
+    link = Column(String, nullable=True)
+
+
+class ProjectTool(Base):
+    __tablename__ = "project_tools"
+
+    id = Column(  # noqa VNE003
+        Integer,
+        primary_key=True,
+        autoincrement=True,
+    )
+    tool_id = Column(ForeignKey("tools.id"), nullable=False)
+    project_id = Column(ForeignKey("projects.id"), nullable=False)
+
+    project = relationship("Project", back_populates="tools")
+    tool = relationship("Tool")
+
+
+class Payment(Base):
+    __tablename__ = "payments"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    telegram_id = Column(Integer, nullable=False)
+    have_tz = Column(Boolean, nullable=False, default=False)
+    product = Column(String(255), nullable=True)
+    payment_id = Column(String(25), nullable=True)
+    payment_amount = Column(Integer, nullable=True)
+    payment_confirmed = Column(Boolean, nullable=False, default=False)
+    payment_date = Column(DateTime, nullable=True)
+    provider_payment_charge_id = Column(String(100), nullable=True)
+    telegram_payment_charge_id = Column(String(100), nullable=True)
+    registered = Column(
+        DateTime,
+        nullable=False,
+        server_default=func.current_timestamp(),
+    )
+
+
+class Currency(Base):
+    __tablename__ = "currencies"
+
+    id = Column(  # noqa VNE003
+        Integer,
+        primary_key=True,
+        autoincrement=True,
+    )
+    name = Column(String, nullable=False)
+    token = Column(String, nullable=False)
+
+
+# Repetitions model
+class Repetition(Base):
+    __tablename__ = "repetitions"
+
+    id = Column(  # noqa VNE003
+        Integer,
+        primary_key=True,
+        autoincrement=True,
+    )
+    chat_id = Column(Integer, nullable=False)
+    message_id = Column(Integer, nullable=False)
+    button_text = Column(String, nullable=False, default="")
+    button_link = Column(String, nullable=False, default="")
+    time_to_send = Column(DateTime, nullable=True, default=None)
+    confirmed = Column(Boolean, nullable=False, default=False)
+    is_send = Column(Boolean, nullable=False, default=False)
+
+
+# Init DB
+def init_db(db_path="database/db.sqlite3"):
+    engine = create_engine(f"sqlite:///{db_path}", echo=False)
+    Base.metadata.create_all(engine)
+    Session = sessionmaker(bind=engine)
+    return Session()

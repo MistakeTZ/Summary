@@ -1,58 +1,148 @@
-import csv
-from aiogram.types import Message, FSInputFile, CallbackQuery
-from aiogram.fsm.context import FSMContext
-from aiogram.utils.markdown import hlink
-from states import UserState
-from os import path
-from config import add_mes, set_menu
+import abc
+from os.path import exists, join
 
-messages = {}
-
-# Загрузка всех сообщений
-def load_messages():
-    global messages
-    with open(path.join("support", "messages.csv"), encoding='utf8') as f:
-        reader = csv.reader(f)
-        for line in reader:
-            messages[line[0]] = line[1]
-
-    if "succeful_load" in messages.keys():
-        print(messages["succeful_load"])
+from aiogram import Bot
+from aiogram.types import FSInputFile, Message
 
 
-# Получение текста сообщения по ключу
-def get_text(key: str, *args) -> str:
-    if key in messages.keys():
-        return messages[key].replace("\\n", "\n").replace("\"\"", "\"").format(*args)
-    return messages["default"]
+# Загрузчик сообщений
+class MessageSender:
+
+    # Все доступные сообщения
+    messages = {}
+    bot: Bot
+
+    def __init__(self, bot) -> None:
+        """Определение бота."""
+        self.bot = bot
+
+    @abc.abstractmethod
+    def load_messages(self, path_to_file: str = None):
+        """Метод загружает все сообщения из файла."""
+        return
+
+    # Получение текста сообщения по ключу с указанием аргументов
+    def text(self, key: str, *args) -> str:
+        if key in self.messages:
+            return self.messages[key].format(*args)
+
+        print(f"Key {key} not found")
+        return self.messages["default"]
+
+    # Отправка сообщения пользователю
+    async def message(self, chat_id: int, key: str, reply_markup=None, *args):
+        text = self.text(key, *args)
+        await self.bot.sender.message(chat_id, text, reply_markup=reply_markup)
+
+    # Изменение сообщения
+    async def edit_message(
+        self,
+        msg: Message,
+        key: str,
+        reply_markup=None,
+        *args,
+    ):
+        text = self.text(key, *args)
+        await msg.edit_text(text, reply_markup=reply_markup)
+
+    # Отправление кешированного медиа
+    async def send_cached_media(
+        self,
+        chat_id: int,
+        media_type: str,
+        media: str,
+        key: str = None,
+        reply_markup=None,
+        *args,
+    ):
+        if key:
+            text = self.text(key, *args)
+        else:
+            text = None
+
+        kwargs = {
+            "chat_id": chat_id,
+            media_type: media,
+            "caption": text,
+            "reply_markup": reply_markup,
+        }
+
+        if media_type == "photo":
+            await self.bot.send_photo(**kwargs)
+        elif media_type == "video":
+            await self.bot.send_video(**kwargs)
+        elif media_type == "audio":
+            await self.bot.send_audio(**kwargs)
+        elif media_type == "document":
+            await self.bot.send_document(**kwargs)
+
+    # Открытие медиа
+    async def send_media(
+        self,
+        chat_id: int,
+        media_type: str,
+        media: str,
+        key: str = None,
+        reply_markup=None,
+        path: str = None,
+        name: str = None,
+        *args,
+    ):
+        if key:
+            text = self.text(key, *args)
+        else:
+            text = None
+
+        if name:
+            name = name + "." + media.split(".")[1]
+        else:
+            name = media
+
+        if path:
+            path = join(path, media)
+        else:
+            path = join("support", "media", media)
+
+        media_file = FSInputFile(path=path, filename=name)
+        kwargs = {
+            "chat_id": chat_id,
+            media_type: media_file,
+            "caption": text,
+            "reply_markup": reply_markup,
+        }
+
+        match media_type:
+            case "photo":
+                await self.bot.send_photo(**kwargs)
+            case "video":
+                await self.bot.send_video(**kwargs)
+            case "audio":
+                await self.bot.send_audio(**kwargs)
+            case "document":
+                await self.bot.send_document(**kwargs)
 
 
-# Отправка сообщения пользователю
-async def message(id: int, msg: Message, key: str, reply_markup=None, *args, **kwargs):
-    text = get_text(key, *args)
-    mes_id = await msg.answer(text, reply_markup=reply_markup)
+# Загрузчик сообщений из JSON файла
+class JSONMessageSender(MessageSender):
 
-    if not "nodelete" in kwargs.keys():
-        add_mes(id, mes_id.message_id)
-    if "set_menu" in kwargs.keys():
-        set_menu(id, mes_id.message_id)
-    
+    # Загрузка всех сообщений
+    def load_messages(self, path_to_file: str = None):
+        import json
 
-# Отправка сообщения, клавиатуры и изменение состояния
-async def send_message(msg: Message | CallbackQuery, text: str, reply_markup = None, state: FSMContext = None, new_state: UserState = None, *args, **kwargs):
-    id = msg.from_user.id
-    if type(msg) == CallbackQuery:
-        msg = msg.message
-        try:
-            await msg.edit_reply_markup()
-        except:
-            pass
-    if state != None:
-        await state.set_state(new_state)
-    if "photo" in kwargs.keys():
-        photo = FSInputFile(path=kwargs["photo"])
-        mes_id = await msg.answer_photo(photo)
-        if not "set_menu" in kwargs.keys():
-            add_mes(id, mes_id.message_id)
+        # Файл не предопределен
+        if not path_to_file:
+            path_to_file = join("support", "messages.json")
 
-    await message(id, msg, text, reply_markup, *args, **kwargs)
+        # Файл не найден
+        if not exists(path_to_file):
+            raise ValueError("Message file not found")
+
+        # Загрузка сообщений
+        with open(path_to_file, encoding="utf8") as file:
+            self.messages = json.load(file)
+
+        # Сообщение об успешной загрузке
+        if "succeful_load" in self.messages:
+            print(self.messages["succeful_load"])
+
+        return True
