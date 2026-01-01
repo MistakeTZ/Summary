@@ -1,14 +1,15 @@
 import asyncio
+import logging
 from os import path
 
 from aiogram import F
 from aiogram.fsm.context import FSMContext
-from aiogram.types import FSInputFile
+from aiogram.types import BufferedInputFile, FSInputFile
 from aiogram.types.callback_query import CallbackQuery
 from aiogram.types.input_media_photo import InputMediaPhoto
 from aiogram.utils.markdown import hlink
 
-from database.model import User
+from database.model import Currency, User
 from tasks import kb
 from tasks.config import get_config
 from tasks.loader import bot, dp, sender, session
@@ -98,19 +99,6 @@ async def zakaz(clbk: CallbackQuery, *args):
     )
 
 
-# Базы данных
-async def database(clbck: CallbackQuery, *args):
-    await clbck.message.edit_reply_markup()
-    mes_id = await clbck.message.answer(
-        sender.text(
-            "databases",
-            hlink("библиотеки Python", "https://github.com/aiogram/aiogram"),
-        ),
-        reply_markup=kb.buttons("back"),
-        disable_web_page_preview=True,
-    )
-
-
 # Составление графа
 async def graph(clbck: CallbackQuery, *args):
     await sender.message(clbck, "graphs")
@@ -126,7 +114,7 @@ async def graph(clbck: CallbackQuery, *args):
     mes_id = await clbck.message.answer_media_group(media=photos)
 
     await asyncio.sleep(2)
-    await sender.message(clbck, "also", kb.buttons("back"))
+    await sender.message(clbck, "also", kb.buttons(True, "back"))
 
 
 # Форматирование текста
@@ -134,26 +122,21 @@ async def formatting(clbk: CallbackQuery, *args):
     await clbk.message.edit_reply_markup()
     mes_id = await clbk.message.answer(
         text=sender.text("formatting", hlink("ссылка", "t.me/o_l_ebedev")),
-        reply_markup=kb.buttons("back"),
+        reply_markup=kb.buttons(True, "back"),
         disable_web_page_preview=True,
     )
 
 
-# Курс
-async def currence(clbk: CallbackQuery, *args):
-    await sender.message(clbk, "choose_currency", kb.currency())
-
-
 # Оплата и поддержка
 async def help(clbk: CallbackQuery, *args):
-    await sender.message(clbk, "to_pay", kb.buttons("back"))
+    await sender.message(clbk, "to_pay", kb.buttons(True, "back"))
 
 
 # Оформления заказа
 @dp.callback_query(F.data == "make_zakaz")
 async def zakaz_handler(clbck: CallbackQuery, state: FSMContext) -> None:
     await sender.message(
-        clbck, "write_product", kb.buttons("back"), state, UserState.product
+        clbck, "write_product", kb.buttons(True, "back"), state, UserState.product
     )
 
 
@@ -184,24 +167,24 @@ async def zakaz_handler(clbck: CallbackQuery, state: FSMContext) -> None:
 
 
 # Выбор актива
-@dp.callback_query(F.data.startswith("currency_"))
+@dp.callback_query(F.data.startswith("token_"))
 async def currency_handler(clbck: CallbackQuery, state: FSMContext) -> None:
-    data = clbck.data.split("_")
+    token = session.query(Currency).filter_by(token=clbck.data.split("_")[1]).first()
+    user_id = clbck.from_user.id
     try:
-        price = currency.make_graph(data[2], data[1])
+        buffer, last_price = currency.make_graph(token.token, token.name)
 
-        mes_id = await clbck.message.answer("<b><code>" + data[1] + "</code></b>")
-        await sender.message(
-            clbck,
-            "price",
-            kb.buttons("back"),
-            None,
-            None,
-            price,
-            photo=path.join("temp", "shares.png"),
+        await bot.send_photo(
+            user_id,
+            BufferedInputFile(buffer.read(), f"{token.token}.jpg"),
+            caption=sender.text("price", token.name, last_price),
+            reply_markup=kb.buttons(True, "back"),
         )
-    except:
-        await sender.message(clbck, "price_error", kb.buttons("back"))
+    except Exception as e:
+        logging.error(e)
+        await sender.message(user_id, "price_error", kb.buttons(True, "back"))
+    finally:
+        await clbck.message.delete()
 
 
 # Встроенный браузер
@@ -226,19 +209,3 @@ async def currency_handler(clbck: CallbackQuery, state: FSMContext) -> None:
 async def photo_handler(clbck: CallbackQuery, state: FSMContext) -> None:
     user.users[str(clbck.from_user.id)].photo = -1
     await sender.message(clbck, "no_photo", None, state, UserState.email)
-
-
-# Примеры
-async def examples(clbk: CallbackQuery, *args):
-    await clbk.message.edit_reply_markup()
-    await send_portfolio(clbk.from_user.id)
-
-
-# Следующая страница портфолио
-@dp.callback_query(F.data.startswith("portfolio_"))
-async def currency_handler(clbck: CallbackQuery, state: FSMContext) -> None:
-    await send_portfolio(
-        clbck.from_user.id,
-        int(clbck.data.split("_")[-1]),
-        previous=clbck.message.message_id,
-    )

@@ -34,7 +34,12 @@ class MessageSender:
     # Отправка сообщения пользователю
     async def message(self, chat_id: int, key: str, reply_markup=None, *args):
         text = self.text(key, *args)
-        await self.bot.send_message(chat_id, text, reply_markup=reply_markup)
+        await self.bot.send_message(
+            chat_id,
+            text,
+            reply_markup=reply_markup,
+            disable_web_page_preview=True,
+        )
 
     # Отправить сообщение с задержками между символами
     async def broadcasting_message(

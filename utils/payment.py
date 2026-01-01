@@ -20,7 +20,7 @@ async def successful_payment_handler(msg: Message):
     successful_payment = msg.successful_payment
     user_id = msg.from_user.id
 
-    await sender.message(user_id, "succeful_payment", kb.buttons("back"))
+    await sender.message(user_id, "succeful_payment", kb.menu("Приватный контент"))
     payment = Payment(
         telegram_id=user_id,
         product=successful_payment.invoice_payload,

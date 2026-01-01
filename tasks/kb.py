@@ -6,7 +6,7 @@ from aiogram.types import (
     ReplyKeyboardRemove,
 )
 
-from database.model import User
+from database.model import Currency, User
 from tasks.loader import sender, session
 
 
@@ -170,12 +170,12 @@ def user_table(data, restrict=False):
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-def menu() -> ReplyKeyboardMarkup:
+def menu(pay_button="Тест оплаты") -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text="Мои кейсы")],
             [
-                KeyboardButton(text="Тест оплаты"),
+                KeyboardButton(text=pay_button),
                 KeyboardButton(text="Базы данных"),
             ],
             [
@@ -227,3 +227,12 @@ def project(project_number, photo_number=None, max_photos=0):
     return InlineKeyboardMarkup(
         inline_keyboard=keyboard,
     )
+
+
+def currency():
+    currencies = session.query(Currency).all()
+    keyboard = []
+    for currency in currencies:
+        keyboard.extend([currency.name, f"token_{currency.token}"])
+
+    return table(3, *keyboard)

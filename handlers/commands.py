@@ -65,7 +65,6 @@ async def command_start_handler(msg: Message, state: FSMContext) -> None:
 @dp.message(Command("menu"))
 async def command_settings(msg: Message, state: FSMContext) -> None:
     await send_menu(msg.from_user.id)
-    await msg.delete()
 
 
 # Команда портфолио

@@ -19,6 +19,11 @@ async def cases_handler(msg: Message):
     await send_project(msg.from_user.id)
 
 
+@dp.message(F.text == "Приватный контент")
+async def cases_handler(msg: Message):
+    await sender.message(msg.from_user.id, "private")
+
+
 @dp.message(F.text == "Тест оплаты")
 async def payment_text_handler(msg: Message):
     user_id = msg.from_user.id
@@ -26,6 +31,22 @@ async def payment_text_handler(msg: Message):
     await asyncio.sleep(2)
     await sender.message(user_id, "test_payment")
     await pay(user_id)
+
+
+@dp.message(F.text == "Базы данных")
+async def payment_text_handler(msg: Message):
+    user_id = msg.from_user.id
+    await sender.message(
+        user_id,
+        "databases",
+        kb.buttons(True, "back"),
+    )
+
+
+@dp.message(F.text == "Курс акций")
+async def payment_text_handler(msg: Message):
+    user_id = msg.from_user.id
+    await sender.message(user_id, "choose_currency", kb.currency())
 
 
 # Установка электронной почты
@@ -60,7 +81,7 @@ async def profile(msg: Message, state: FSMContext):
     if use.photo != -1:
         await bot.copy_message(id, id, use.photo)
     await asyncio.sleep(5)
-    await sender.message(msg, "info_give", kb.buttons("back_to_menu", "back"))
+    await sender.message(msg, "info_give", kb.buttons(True, "back_to_menu", "back"))
 
 
 # Ввод имени

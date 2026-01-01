@@ -26,7 +26,7 @@ async def multiple_tasks():
 
 # Запуск и остановка бота
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
+    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
