@@ -1,5 +1,4 @@
 import asyncio
-import logging
 
 from aiogram import F
 from aiogram.filters import Command
@@ -73,11 +72,15 @@ async def work_handler(msg: Message):
 
 
 @dp.message(F.text == sender.text("anket"))
+@dp.callback_query(F.data == "anket")
 async def anket_handler(msg: Message, state: FSMContext):
     user_id = msg.from_user.id
     await sender.message(user_id, "how_your_name", kb.remove())
     await state.set_state(UserState.info)
     await state.set_data({"state": "name"})
+
+    if not isinstance(msg, Message):
+        await msg.message.edit_reply_markup()
 
 
 @dp.message(UserState.info)
@@ -97,9 +100,85 @@ async def info_handler(msg: Message, state: FSMContext):
             data["state"] = "gender"
 
         case "gender":
-            pass
+            try:
+                gender = sender.text("genders").split("/").index(msg.text)
+            except ValueError:
+                await sender.message(
+                    user_id,
+                    "your_gender",
+                    kb.reply_table(2, *sender.text("genders").split("/")),
+                    data["name"],
+                )
+                return
+            await sender.message(
+                user_id,
+                "write_phone",
+                kb.phone(),
+            )
+            data["gender"] = msg.text
+            data["state"] = "phone"
 
-    logging.info(data)
+        case "phone":
+            if not msg.contact:
+                await sender.message(
+                    user_id,
+                    "write_phone",
+                    kb.phone(),
+                )
+                return
+            await sender.message(
+                user_id,
+                "your_email",
+                kb.remove(),
+            )
+            data["phone"] = msg.contact.phone_number
+            data["state"] = "email"
+
+        case "email":
+            if not msg.entities:
+                await sender.message(
+                    user_id,
+                    "wrong_email",
+                    kb.remove(),
+                )
+                return
+            ent = msg.entities[0]
+            if ent.type != "email":
+                await sender.message(
+                    user_id,
+                    "wrong_email",
+                    kb.remove(),
+                )
+                return
+
+            data["email"] = msg.text[ent.offset : ent.offset + ent.length]
+            data["state"] = "message"
+            await sender.message(
+                user_id,
+                "write_message",
+            )
+
+        case "message":
+            if not msg.text:
+                await sender.message(
+                    user_id,
+                    "write_message",
+                )
+                return
+            else:
+                data["message"] = msg.html_text
+                await sender.message(
+                    user_id,
+                    "confirm_data",
+                    kb.buttons(True, "confirm", "confirm_data", "edit", "anket"),
+                    user_id,
+                    data["name"],
+                    data["gender"],
+                    data["phone"],
+                    data["email"],
+                    msg.html_text,
+                )
+
     await state.set_data(data)
 
 
@@ -107,36 +186,3 @@ async def info_handler(msg: Message, state: FSMContext):
 @dp.message()
 async def command_settings(msg: Message) -> None:
     await send_menu(msg.from_user.id)
-
-
-async def profile(msg: Message, state: FSMContext):
-    id = msg.from_user.id
-    email = ""
-    if msg.entities:
-        ent = msg.entities[0]
-        if ent.type == "email":
-            email = msg.text[ent.offset : ent.offset + ent.length]
-    if not email:
-        await sender.message(msg, "wrong_email")
-        return
-
-    user.users[str(id)].email = email
-    await sender.message(msg, "email_given", None, state, UserState.default)
-    await asyncio.sleep(2)
-    use = user.users[str(id)]
-    await sender.message(
-        msg,
-        "your_data",
-        None,
-        None,
-        None,
-        hlink(use.name, "tg://user?id=" + str(use.id)),
-        sender.text(use.sex).lower(),
-        use.phone,
-        use.email,
-        "" if use.photo != -1 else "отсутствует",
-    )
-    if use.photo != -1:
-        await bot.copy_message(id, id, use.photo)
-    await asyncio.sleep(5)
-    await sender.message(msg, "info_give", kb.buttons(True, "back_to_menu", "back"))

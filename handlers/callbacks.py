@@ -13,6 +13,8 @@ from utils import currency
 from utils.menu import send_menu
 from utils.protfolio import send_project
 
+previous_message = "Пусть этот день прниесет тебе много радости и счастья!"
+
 
 @dp.callback_query(F.data == "confirm_license")
 async def confirm_license(clbck: CallbackQuery):
@@ -31,6 +33,30 @@ async def confirm_license(clbck: CallbackQuery):
     await send_menu(user_id)
     await asyncio.sleep(2)
     await clbck.message.delete()
+
+
+@dp.callback_query(F.data == "confirm_data")
+async def confirm_data(clbck: CallbackQuery, state: FSMContext):
+    global previous_message
+    user_id = clbck.from_user.id
+    await clbck.message.edit_reply_markup()
+    data = await state.get_data()
+    logging.info(data)
+
+    await sender.edit_message(
+        clbck.message,
+        "data_confirmed",
+        None,
+        user_id,
+        data["name"],
+        data["gender"],
+        data["phone"],
+        data["email"],
+        previous_message,
+    )
+    previous_message = data.get("message", previous_message)
+    await asyncio.sleep(2)
+    await send_menu(user_id)
 
 
 @dp.callback_query(F.data.startswith("project"))
