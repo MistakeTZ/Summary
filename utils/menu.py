@@ -9,9 +9,9 @@ from tasks.loader import sender, session
 async def send_menu(user_id):
     payment = session.query(Payment).filter_by(telegram_id=user_id).first()
     if payment:
-        payment_text = "Приватный контент"
+        payment_text = sender.text("private_content")
     else:
-        payment_text = "Тест оплаты"
+        payment_text = sender.text("pay_test")
     try:
         await sender.send_cached_media(
             user_id,

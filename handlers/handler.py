@@ -1,30 +1,31 @@
 import asyncio
-import os
-from datetime import datetime
+import logging
 
 from aiogram import F
+from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message, ReplyKeyboardRemove
+from aiogram.types import Message
 from aiogram.utils.markdown import hlink
 
 import tasks.kb as kb
 from tasks.loader import bot, dp, sender
 from tasks.states import UserState
+from utils.menu import send_menu
 from utils.payment import pay
 from utils.protfolio import send_project
 
 
-@dp.message(F.text == "Мои кейсы")
+@dp.message(F.text == sender.text("my_cases"))
 async def cases_handler(msg: Message):
     await send_project(msg.from_user.id)
 
 
-@dp.message(F.text == "Приватный контент")
+@dp.message(F.text == "private_content")
 async def cases_handler(msg: Message):
     await sender.message(msg.from_user.id, "private")
 
 
-@dp.message(F.text == "Тест оплаты")
+@dp.message(F.text == sender.text("pay_test"))
 async def payment_text_handler(msg: Message):
     user_id = msg.from_user.id
     await sender.message(user_id, "text_payment")
@@ -33,8 +34,8 @@ async def payment_text_handler(msg: Message):
     await pay(user_id)
 
 
-@dp.message(F.text == "Базы данных")
-async def payment_text_handler(msg: Message):
+@dp.message(F.text == sender.text("database"))
+async def database_handler(msg: Message):
     user_id = msg.from_user.id
     await sender.message(
         user_id,
@@ -43,14 +44,71 @@ async def payment_text_handler(msg: Message):
     )
 
 
-@dp.message(F.text == "Курс акций")
-async def payment_text_handler(msg: Message):
+@dp.message(F.text == sender.text("course"))
+async def course_handler(msg: Message):
     user_id = msg.from_user.id
     await sender.message(user_id, "choose_currency", kb.currency())
 
 
-# Установка электронной почты
-@dp.message(UserState.email)
+@dp.message(F.text == sender.text("format"))
+async def format_handler(msg: Message):
+    user_id = msg.from_user.id
+    await sender.message(
+        user_id,
+        "formatting",
+        kb.buttons(True, "back"),
+    )
+
+
+@dp.message(F.text == sender.text("embedded_browser"))
+async def browser_handler(msg: Message):
+    user_id = msg.from_user.id
+    await sender.message(user_id, "site", kb.site())
+
+
+@dp.message(F.text == sender.text("work_conditions"))
+async def work_handler(msg: Message):
+    user_id = msg.from_user.id
+    await sender.message(user_id, "to_pay", kb.buttons(True, "back"))
+
+
+@dp.message(F.text == sender.text("anket"))
+async def anket_handler(msg: Message, state: FSMContext):
+    user_id = msg.from_user.id
+    await sender.message(user_id, "how_your_name", kb.remove())
+    await state.set_state(UserState.info)
+    await state.set_data({"state": "name"})
+
+
+@dp.message(UserState.info)
+async def info_handler(msg: Message, state: FSMContext):
+    user_id = msg.from_user.id
+    data = await state.get_data()
+
+    match data.get("state"):
+        case "name":
+            await sender.message(
+                user_id,
+                "your_gender",
+                kb.reply_table(2, *sender.text("genders").split("/")),
+                msg.text,
+            )
+            data["name"] = msg.text
+            data["state"] = "gender"
+
+        case "gender":
+            pass
+
+    logging.info(data)
+    await state.set_data(data)
+
+
+@dp.message(Command("menu"))
+@dp.message()
+async def command_settings(msg: Message) -> None:
+    await send_menu(msg.from_user.id)
+
+
 async def profile(msg: Message, state: FSMContext):
     id = msg.from_user.id
     email = ""
@@ -82,45 +140,3 @@ async def profile(msg: Message, state: FSMContext):
         await bot.copy_message(id, id, use.photo)
     await asyncio.sleep(5)
     await sender.message(msg, "info_give", kb.buttons(True, "back_to_menu", "back"))
-
-
-# Ввод имени
-@dp.message(UserState.name)
-async def profile(msg: Message, state: FSMContext):
-    id = msg.from_user.id
-    user.add_user(id, msg.text)
-    await sender.message(msg, "your_sex", kb.sex(), state, UserState.default, msg.text)
-
-
-# Отправка телефона
-@dp.message(UserState.phone)
-async def profile(msg: Message, state: FSMContext):
-    id = msg.from_user.id
-    if msg.contact:
-        user.users[str(id)].phone = msg.contact.phone_number
-        await sender.message(
-            msg, "phone_get", ReplyKeyboardRemove(), state, UserState.photo
-        )
-        await state.set_state(UserState.photo)
-        await sender.message(msg, "send_photo", kb.buttons("skip", "skip_photo"))
-    else:
-        await sender.message(msg, "wrong_phone")
-
-
-# Отправка фото
-@dp.message(UserState.photo)
-async def profile(msg: Message, state: FSMContext):
-    id = msg.from_user.id
-    if msg.photo:
-        user.users[str(id)].photo = msg.message_id
-        await sender.message(msg, "photo_sended", None, state, UserState.email)
-
-
-# Ввод продукта
-@dp.message(UserState.product, F.text)
-async def profile(msg: Message, state: FSMContext):
-    await sender.message(msg, "have_TZ", kb.two_buttons("yes", "tz_y", "no", "tz_n"))
-    DB.commit(
-        "insert into payments (telegram_id, product, registered) values (?, ?, ?)",
-        [msg.from_user.id, msg.text, datetime.now()],
-    )

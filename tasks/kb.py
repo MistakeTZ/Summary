@@ -4,6 +4,7 @@ from aiogram.types import (
     KeyboardButton,
     ReplyKeyboardMarkup,
     ReplyKeyboardRemove,
+    WebAppInfo,
 )
 
 from database.model import Currency, User
@@ -43,16 +44,6 @@ def buttons(is_keys: bool, *args) -> InlineKeyboardMarkup:
             for i in range((len(args) + 1) // 2)
         ]
     return InlineKeyboardMarkup(inline_keyboard=in_buttons)
-
-
-# Reply клавиатура с одной кнопкой
-def reply(name) -> ReplyKeyboardMarkup:
-    in_buttons = [[KeyboardButton(text=name)]]
-    return ReplyKeyboardMarkup(
-        keyboard=in_buttons,
-        one_time_keyboard=True,
-        resize_keyboard=True,
-    )
 
 
 # Таблица inline кнопок
@@ -170,29 +161,26 @@ def user_table(data, restrict=False):
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-def menu(pay_button="Тест оплаты") -> ReplyKeyboardMarkup:
+def menu(pay_button) -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="Мои кейсы")],
+            [
+                KeyboardButton(text=sender.text("my_cases")),
+                KeyboardButton(text=sender.text("work_conditions")),
+            ],
             [
                 KeyboardButton(text=pay_button),
-                KeyboardButton(text="Базы данных"),
+                KeyboardButton(text=sender.text("database")),
             ],
             [
-                KeyboardButton(text="Курс акций"),
-                KeyboardButton(text="Форматирование"),
+                KeyboardButton(text=sender.text("course")),
+                KeyboardButton(text=sender.text("format")),
             ],
             [
-                KeyboardButton(text="Сбор информации"),
-                KeyboardButton(text="Встроенный браузер"),
+                KeyboardButton(text=sender.text("anket")),
+                KeyboardButton(text=sender.text("embedded_browser")),
             ],
-            [
-                KeyboardButton(text="Создание графиков"),
-                KeyboardButton(text="Связь со мной"),
-            ],
-            [
-                KeyboardButton(text="Стоимость"),
-            ],
+            [],
         ],
         one_time_keyboard=False,
         resize_keyboard=True,
@@ -236,3 +224,24 @@ def currency():
         keyboard.extend([currency.name, f"token_{currency.token}"])
 
     return table(3, *keyboard)
+
+
+def site():
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text="Перейти на сайт",
+                web_app=WebAppInfo(url="https://oleg-swan.ru"),
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text=sender.text("back"),
+                callback_data="back",
+            ),
+        ],
+    ]
+
+    return InlineKeyboardMarkup(
+        inline_keyboard=keyboard,
+    )

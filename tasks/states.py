@@ -5,9 +5,6 @@ from aiogram.fsm.state import State, StatesGroup
 class UserState(StatesGroup):
     default = State()
     admin = State()
-    license = State()
-    email = State()
-    name = State()
-    phone = State()
-    photo = State()
+    info = State()
     product = State()
+    mailing = State()
