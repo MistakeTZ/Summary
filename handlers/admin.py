@@ -295,7 +295,7 @@ async def mailing(msg: Message, state: FSMContext):
 
 
 # Установка базы данных
-@dp.message(F.document, F.document.filename.split(".")[-1] == "sqlite3", AdminFilter())
+@dp.message(F.document, F.document.file_name.split(".")[-1] == "sqlite3", AdminFilter())
 async def set_databse(msg: Message, state: FSMContext):
     user_id = msg.from_user.id
     user = session.query(User).filter_by(telegram_id=user_id).one()

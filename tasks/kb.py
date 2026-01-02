@@ -216,7 +216,7 @@ def project(project_number, photo_number=None, max_photos=0):
         [
             InlineKeyboardButton(
                 text=sender.text("back"),
-                callback_data="menu",
+                callback_data="back",
             ),
         ]
     )
