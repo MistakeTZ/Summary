@@ -212,6 +212,15 @@ def project(project_number, photo_number=None, max_photos=0):
         ]
     )
 
+    keyboard.append(
+        [
+            InlineKeyboardButton(
+                text=sender.text("back"),
+                callback_data="menu",
+            ),
+        ]
+    )
+
     return InlineKeyboardMarkup(
         inline_keyboard=keyboard,
     )

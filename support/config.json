@@ -1,5 +1,13 @@
 {
     "commands": [],
+    "admin_scope": [
+        "list",
+        "role",
+        "ban",
+        "banre",
+        "db",
+        "mail"
+    ],
     "admins": [
         1900878938
     ],
